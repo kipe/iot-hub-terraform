@@ -46,5 +46,5 @@ KEY="${scaleway_iot_device.iot-device[count.index].certificate[0].key}"
 CA="${data.http.iot-hub-ca.response_body}"
   EOT
   directory_permission = 0700
-  file_permission = 0400
+  file_permission = 0600
 }

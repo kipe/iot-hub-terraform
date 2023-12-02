@@ -2,11 +2,14 @@
 import os
 import logging
 import tempfile
+from pathlib import Path
 from paho.mqtt.client import Client
 from dotenv import dotenv_values
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+
+CLIENT_CONFIG_PATH = Path(__file__, "..", "..", "device-configs").resolve()
 
 
 def read_temperature() -> float:
@@ -18,7 +21,7 @@ def read_temperature() -> float:
 
 def load_device_configuration(device_name: str) -> dict:
     # Load the configuration variables from the files
-    return dotenv_values(f"../device-configs/{device_name}.env")
+    return dotenv_values(CLIENT_CONFIG_PATH / f"{device_name}.env")
 
 
 def set_mqtt_certificates(mqttc: Client, config: dict):
@@ -50,7 +53,7 @@ if __name__ == "__main__":
             config_file.rstrip(".env")
             for config_file in filter(
                 lambda x: x.endswith(".env"),
-                os.listdir("../device-configs"),
+                os.listdir(CLIENT_CONFIG_PATH),
             )
         ]
     ):
