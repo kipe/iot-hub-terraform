@@ -13,13 +13,6 @@ resource "scaleway_iot_hub" "iot-hub" {
 data "http" "iot-hub-ca" {
   url = "https://iot.s3.nl-ams.scw.cloud/certificates/${scaleway_iot_hub.iot-hub.region}/iot-hub-ca.pem"
 }
-# Create configuration file for the IoT devices
-resource "local_file" "iot-hub-ca" {
-  filename = "${path.root}/../device-configs/iot-hub-ca.pem"
-  content = data.http.iot-hub-ca.response_body
-  directory_permission = 0700
-  file_permission = 0400
-}
 # Create the IoT devices
 resource "scaleway_iot_device" "iot-device" {
   count = var.scaleway_iot_device_count
@@ -44,23 +37,13 @@ resource "scaleway_iot_route" "route" {
 resource "local_file" "iot-device-configuration" {
   count = var.scaleway_iot_device_count
   filename = "${path.root}/../device-configs/device-${count.index + 1}.env"
-  content = "MQTT_HOST=\"${scaleway_iot_hub.iot-hub.endpoint}\"\nDEVICE_ID=\"${scaleway_iot_device.iot-device[count.index].id}\"\n"
-  directory_permission = 0700
-  file_permission = 0400
-}
-# Create certificate files for the IoT devices
-resource "local_sensitive_file" "iot-device-cert" {
-  count = var.scaleway_iot_device_count
-  filename = "${path.root}/../device-configs/device-${count.index + 1}.crt"
-  content = scaleway_iot_device.iot-device[count.index].certificate[0].crt
-  directory_permission = 0700
-  file_permission = 0400
-}
-# Create certificate keys for the IoT devices
-resource "local_sensitive_file" "iot-device-key" {
-  count = var.scaleway_iot_device_count
-  filename = "${path.root}/../device-configs/device-${count.index + 1}.key"
-  content = scaleway_iot_device.iot-device[count.index].certificate[0].key
+  content = <<EOT
+MQTT_HOST="${scaleway_iot_hub.iot-hub.endpoint}"
+DEVICE_ID="${scaleway_iot_device.iot-device[count.index].id}"
+CERT="${scaleway_iot_device.iot-device[count.index].certificate[0].crt}"
+KEY="${scaleway_iot_device.iot-device[count.index].certificate[0].key}"
+CA="${data.http.iot-hub-ca.response_body}"
+  EOT
   directory_permission = 0700
   file_permission = 0400
 }
