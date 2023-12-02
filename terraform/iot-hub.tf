@@ -8,6 +8,18 @@ resource "scaleway_iot_hub" "iot-hub" {
   name = "iot-hub"
   product_plan = "plan_shared"
 }
+# Download the certificate
+# see: https://github.com/scaleway/terraform-provider-scaleway/issues/2264
+data "http" "iot-hub-ca" {
+  url = "https://iot.s3.nl-ams.scw.cloud/certificates/${scaleway_iot_hub.iot-hub.region}/iot-hub-ca.pem"
+}
+# Create configuration file for the IoT devices
+resource "local_file" "iot-hub-ca" {
+  filename = "${path.root}/../device-configs/iot-hub-ca.pem"
+  content = data.http.iot-hub-ca.response_body
+  directory_permission = 0700
+  file_permission = 0400
+}
 # Create the IoT devices
 resource "scaleway_iot_device" "iot-device" {
   count = var.scaleway_iot_device_count

@@ -4,6 +4,22 @@ terraform {
       source = "scaleway/scaleway"
       version = "2.34.0"
     }
+    null = {
+      source = "hashicorp/null"
+      version = "3.2.2"
+    }
+    local = {
+      source = "hashicorp/local"
+      version = "2.4.0"
+    }
+    random = {
+      source = "hashicorp/random"
+      version = "3.5.1"
+    }
+    http = {
+      source = "hashicorp/http"
+      version = "3.4.0"
+    }
   }
 }
 

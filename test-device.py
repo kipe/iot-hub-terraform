@@ -9,13 +9,6 @@ logger = logging.getLogger(__name__)
 
 
 if __name__ == '__main__':
-    # Unfortunately the IoT Hub CA still needs to be downloaded from the web UI
-    # see: https://github.com/scaleway/terraform-provider-scaleway/issues/2264
-    if not os.path.exists('./device-configs/iot-hub-ca.pem'):
-        raise ValueError(
-            'You need to manually download IoT Hub CA from the web ui '
-            'and store it to "./device-configs/iot-hub-ca.pem"'
-        )
     # Loop over the devices, found based on the environment
     # configuration existing
     for i, device_name in enumerate([
