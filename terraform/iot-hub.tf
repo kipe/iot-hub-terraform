@@ -32,6 +32,7 @@ resource "scaleway_iot_route" "route" {
     username = scaleway_rdb_user.main.name
     password = scaleway_rdb_user.main.password
   }
+  depends_on = [ scaleway_rdb_database.main, scaleway_rdb_user.main, scaleway_rdb_privilege.main, null_resource.create_tables ]
 }
 # Create configuration file for the IoT devices
 resource "local_file" "iot-device-configuration" {
