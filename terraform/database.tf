@@ -84,6 +84,10 @@ output "database_password" {
   value = scaleway_rdb_user.main.password
   sensitive = true
 }
+output "database_name" {
+  value = scaleway_rdb_database.main.name
+  sensitive = true
+}
 output "database_ip" {
   value = scaleway_rdb_instance.database.endpoint_ip
   sensitive = true
