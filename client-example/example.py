@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import json
 import os
 import logging
 import tempfile
@@ -27,15 +26,17 @@ def load_device_configuration(device_name: str) -> dict:
 
 def set_mqtt_certificates(mqttc: Client, config: dict):
     # Create temporary files for certificates
-    with tempfile.NamedTemporaryFile(mode="w") as cert_file:
+    with tempfile.NamedTemporaryFile(mode="w", delete_on_close=False) as cert_file:
         cert_file.write(config["CERT"])
-        cert_file.seek(0)
-        with tempfile.NamedTemporaryFile(mode="w") as key_file:
+        cert_file.close()
+        with tempfile.NamedTemporaryFile(mode="w", delete_on_close=False) as key_file:
             key_file.write(config["KEY"])
-            key_file.seek(0)
-            with tempfile.NamedTemporaryFile(mode="w") as ca_file:
+            key_file.close()
+            with tempfile.NamedTemporaryFile(
+                mode="w", delete_on_close=False
+            ) as ca_file:
                 ca_file.write(config["CA"])
-                ca_file.seek(0)
+                ca_file.close()
                 # Set the certificates to use
                 mqttc.tls_set(
                     ca_certs=ca_file.name,
@@ -70,16 +71,7 @@ if __name__ == "__main__":
         mqttc.loop_start()
         # Publish a temperature value read from the PC
         temperature = read_temperature()
-        mqttc.publish(
-            f"temperature/{config['DEVICE_ID']}",
-            json.dumps(
-                {
-                    "device": config["DEVICE_ID"],
-                    "type": "temperature",
-                    "value": read_temperature(),
-                }
-            ),
-        )
+        mqttc.publish(f"temperature/{config['DEVICE_ID']}", f"{temperature + i:.2f}")
         # Disconnect from MQTT
         mqttc.disconnect()
         # Stop the loop
