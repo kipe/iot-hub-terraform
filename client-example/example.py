@@ -2,9 +2,13 @@
 import os
 import logging
 import tempfile
+import json
+import arrow
 from pathlib import Path
 from paho.mqtt.client import Client
 from dotenv import dotenv_values
+from psutil import cpu_percent, sensors_temperatures
+from psutil._common import shwtemp
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -12,11 +16,11 @@ logger = logging.getLogger(__name__)
 CLIENT_CONFIG_PATH = Path(__file__, "..", "..", "device-configs").resolve()
 
 
-def read_temperature() -> float:
-    temperature = 0.0
-    with open("/sys/class/thermal/thermal_zone0/temp", "r") as f_handle:
-        temperature = float(f_handle.read().strip()) / 1000.0
-    return temperature
+def read_temperature() -> shwtemp:
+    return next(
+        iter(sensors_temperatures().get("k10temp", [])),
+        shwtemp("", 0.0, None, None),
+    )
 
 
 def load_device_configuration(device_name: str) -> dict:
@@ -71,7 +75,23 @@ if __name__ == "__main__":
         mqttc.loop_start()
         # Publish a temperature value read from the PC
         temperature = read_temperature()
-        mqttc.publish(f"temperature/{config['DEVICE_ID']}", f"{temperature + i:.2f}")
+        message = {
+            "time": arrow.utcnow().for_json(),
+            "cpu_usage": {
+                "value": cpu_percent(interval=0.1),
+            },
+            "temperature": {
+                "value": temperature.current,
+                "labels": {
+                    "source": temperature.label,
+                },
+            },
+        }
+        print(message)
+        mqttc.publish(
+            f"device/{config['DEVICE_ID']}",
+            json.dumps(message),
+        )
         # Disconnect from MQTT
         mqttc.disconnect()
         # Stop the loop
