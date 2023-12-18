@@ -55,6 +55,22 @@ resource "scaleway_rdb_instance" "database" {
   volume_type             = "bssd"
   volume_size_in_gb       = var.database_instance_volume_size
 }
+# Setup ACL to allow connections from Scaleway and current IP
+resource "scaleway_rdb_acl" "database" {
+  instance_id = scaleway_rdb_instance.database.id
+  dynamic "acl_rules" {
+    for_each = var.scaleway_peering
+    content {
+      ip          = acl_rules.value
+      description = "Scaleway peering"
+    }
+  }
+  acl_rules {
+    ip          = "${chomp(data.http.current_ip.response_body)}/32"
+    description = "current ip"
+  }
+}
+
 # Create the database
 resource "scaleway_rdb_database" "main" {
   instance_id = scaleway_rdb_instance.database.id
